@@ -1,0 +1,51 @@
+# Keep the local just-lint pre-commit hook from recursively entering this recipe.
+lint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    SKIP=project-lint pre-commit run --all-files
+    yamllint -d '{extends: default, rules: {document-start: disable, line-length: disable, truthy: disable, comments: {min-spaces-from-content: 1}, indentation: {spaces: 2, indent-sequences: consistent}}}' .
+{% if 'ansible' in iac %}
+    playbooks=(ansible/playbooks/*.yml)
+    if [[ -n "${playbooks[*]}" ]]; then
+        cd ansible
+        ANSIBLE_CONFIG=ansible.cfg ansible-lint --offline playbooks/*.yml
+    fi
+{% endif %}
+
+# Offline only: never use fnox or contact a live inventory from this gate.
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+{% if 'ansible' in iac %}
+    playbooks=(ansible/playbooks/*.yml)
+    for playbook in "${playbooks[@]}"; do
+        (cd ansible && ANSIBLE_CONFIG=ansible.cfg ansible-playbook --syntax-check "${playbook#ansible/}")
+    done
+{% endif %}
+{% if 'opentofu' in iac %}
+    terraform_files=(opentofu/*.tf)
+    if [[ -n "${terraform_files[*]}" ]]; then
+        tofu -chdir=opentofu fmt -check
+        tofu -chdir=opentofu validate
+    fi
+{% endif %}
+
+# Live-system dry run: obtain approval for the documented target CIDRs first.
+plan:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+{% if 'ansible' in iac %}
+    playbooks=(ansible/playbooks/*.yml)
+    for playbook in "${playbooks[@]}"; do
+        (cd ansible && ANSIBLE_CONFIG=ansible.cfg fnox exec -- ansible-playbook --check --diff "${playbook#ansible/}")
+    done
+{% endif %}
+{% if 'opentofu' in iac %}
+    terraform_files=(opentofu/*.tf)
+    if [[ -n "${terraform_files[*]}" ]]; then
+        fnox exec -- tofu -chdir=opentofu plan
+    fi
+{% endif %}

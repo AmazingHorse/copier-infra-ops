@@ -1,0 +1,36 @@
+# Infrastructure runbook
+
+Toolchain: **{{ iac | join(', ') }}**. Live target CIDR(s): **{{ live_targets }}**.
+
+## Safety boundary
+
+The CIDRs above identify targets requiring explicit approval; they are not an access grant. The project-owned `.agents/sandbox.toml` is seeded by the base with network denied. Before any live task, the owner must map the approved CIDRs and required ports into `network_allow` and authorize the particular operation. This overlay does not replace that policy, root files or the project-owned `fnox.toml`.
+
+Maintain the repository manifest as the single source of truth for inventory, versions and topology. Keep this runbook and `docs/design.md` aligned with it when it is present.
+
+## Setup and offline validation
+
+1. Run `just setup` to install pinned mise tools and Git hooks. Python-backed tools require an available Python 3.12+; the template maintainer workflow uses Python 3.13. Tool installation is a separate network-enabled operation, never an implicit part of validation.
+2. Run `just --list` to inspect available recipes, then `just check`. The gate runs local pre-commit checks, yamllint and only the syntax/validation checks for the selected IaC tools. It does not unlock Bitwarden, initialize OpenTofu, fetch dependencies or contact infrastructure.
+{% if 'ansible' in iac %}
+3. Ansible starts with an empty `inventory/`, empty pinned collection list and a localhost no-op playbook. Playbooks run from `ansible/` with `ansible.cfg`; host-key checking stays enabled, output uses `callback_result_format = yaml`, and collections stay in `./.ansible/collections`.
+4. When adding a collection, pin its exact version in `ansible/requirements.yml`, review it, then explicitly install it from `ansible/` with `ansible-galaxy collection install -r requirements.yml -p .ansible/collections`. Collection installation is never part of `just check`.
+{% endif %}
+{% if 'opentofu' in iac %}
+3. OpenTofu starts provider-free, so `tofu -chdir=opentofu validate` works offline without initialization. When adding providers, pin them, commit the dependency lock file and explicitly initialize during setup (`tofu -chdir=opentofu init -backend=false` for local validation). Remote backend setup requires separate approval and credentials. Never add initialization/downloads to `just check`; keep state out of Git.
+{% endif %}
+
+## Check → plan → review → apply
+
+1. Document the intended change, exact targets and rollback. Add inventory and real playbooks/configuration only for an approved project change.
+2. Run `just check` first. Offline gate failures do not justify fetching secrets, weakening checks or contacting targets.
+3. Obtain permission for live reads before `just plan`. This recipe wraps each live command with `fnox exec --`. Ansible uses check/diff mode; OpenTofu plans without applying. Review output locally and do not paste sensitive diffs into logs or chat.
+4. Review the full plan, destructive actions, state changes, interruption risk and rollback with the user. Get explicit approval for apply and any smoke checks against **{{ live_targets }}**.
+5. Apply using a project-specific reviewed procedure and `fnox exec --` around commands that use secrets. No generic apply or smoke recipe is supplied. Never disable Ansible host-key checking or use OpenTofu auto-approve.
+6. Run only approved smoke checks. Record non-secret evidence and update the source-of-truth manifest/runbook. Keep state, saved plans, decrypted files and credential artifacts out of Git.
+
+## Secrets
+
+Project references live in `fnox.toml`; the included Bitwarden provider stays in `.config/fnox/provider.toml`. Use Bitwarden folders such as `<company>/<project>` and explicit item fields. Read `.agents/skills/infra-ops-add-secret/SKILL.md` before adding a reference, and `.agents/skills/infra-ops-runbook/SKILL.md` before live changes. The session is provided by the calling shell, never committed.
+
+If Ansible Vault is unavoidable, use executable `.config/fnox/vault-password.sh` and explicitly configure its expected fnox reference; never use `.vault-pass` or decrypt into the working tree.

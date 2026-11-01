@@ -1,0 +1,17 @@
+_subdirectory: template
+_answers_file: .copier-answers.infra-ops.yml
+_min_copier_version: "9.19.1"
+
+iac:
+  type: yaml
+  help: Which IaC tools does this repository use?
+  multiselect: true
+  choices:
+    - ansible
+    - opentofu
+  default:
+    - ansible
+live_targets:
+  type: str
+  help: Live target CIDR(s) requiring explicit user approval before apply/smoke
+  default: "192.168.50.0/24"
