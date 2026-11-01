@@ -42,7 +42,7 @@ plan:
     for playbook in "${playbooks[@]}"; do
         (cd ansible && ANSIBLE_CONFIG=ansible.cfg fnox exec -- ansible-playbook --check --diff "${playbook#ansible/}")
     done
-{% endif %}
+{% endif -%}
 {% if 'opentofu' in iac %}
     terraform_files=(opentofu/*.tf)
     if [[ -n "${terraform_files[*]}" ]]; then

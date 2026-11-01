@@ -21,7 +21,7 @@ Selected toolchain: {{ iac | join(', ') }}.
 ## Ansible
 
 Run from `ansible/` so `ansible.cfg` is used. Collections are local to `ansible/.ansible/collections`; review and exactly pin `requirements.yml` before an explicit setup install. The seeded localhost playbook has no remote effects. The empty inventory is intentional; add approved hosts only after documenting the manifest and access policy.
-{% endif %}
+{% endif -%}
 {% if 'opentofu' in iac %}
 
 ## OpenTofu
