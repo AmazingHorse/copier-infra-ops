@@ -44,8 +44,8 @@ Task precedence is project > archetype > base. Add project overrides in `project
 Ansible starts with an empty inventory, empty collection requirements and a localhost no-op playbook. OpenTofu starts provider-free and can validate offline. When adding dependencies, pin them and perform installation/initialization as an explicit setup action; never hide network access inside `check`.
 
 ## Develop and test
+
 Clone `copier-base` as a sibling, or set `BASE_TEMPLATE` to a local clone. Install the maintainer tools from `mise.toml` and the full rendered toolchain before invoking the gate: pre-commit 4.7.0, pre-commit-hooks 6.0.0, betterleaks 1.9.0, yamllint 1.38.0, ansible-core 2.21.5, ansible-lint 26.10.1, OpenTofu 1.13.2 and the base's remaining pins. `mise exec -- bash tests/render.sh` consumes installed tools; it does not download them.
-Clone `copier-base` as a sibling, or set `BASE_TEMPLATE` to a local clone. Install the maintainer tools from `mise.toml` and the full rendered toolchain before invoking the gate: pre-commit 4.5.1, pre-commit-hooks 6.0.0, betterleaks 1.9.0, yamllint 1.38.0, ansible-core 2.21.5, ansible-lint 26.10.1, OpenTofu 1.13.2 and the base's remaining pins. `mise exec -- bash tests/render.sh` consumes installed tools; it does not download them.
 
 The isolated harness snapshots both local Git repositories, makes a test tag only in temporary fixtures if needed, renders all three IaC combinations and checks `just --list` and `just check` without Bitwarden or network dependencies. It also checks conditional files, tool pins, base-owned byte preservation, custom project files and both independent update paths. HOME/XDG/cache state is isolated and removed on exit. Source repositories and their tags are not changed.
 

@@ -61,7 +61,7 @@ for source_name in base infra; do
   git -C "$source_repo" rev-parse --verify HEAD >/dev/null
   git clone --quiet --no-hardlinks "$source_repo" "$work/$source_name"
   if ! git -C "$work/$source_name" describe --tags --exact-match HEAD >/dev/null 2>&1; then
-    git -C "$work/$source_name" tag v0.0.0-test
+    git -C "$work/$source_name" tag v0.1.0
   fi
 done
 base_revision=$(git -C "$work/base" rev-parse HEAD)
