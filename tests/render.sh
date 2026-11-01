@@ -13,13 +13,16 @@ base=$(cd -- "$base" && pwd -P)
 tool_path=''
 for tool in git python3 copier mise just pre-commit betterleaks check-yaml \
   end-of-file-fixer trailing-whitespace-fixer yamllint ansible-lint \
-  ansible-playbook tofu; do
+  ansible ansible-config ansible-galaxy ansible-playbook tofu; do
   executable=$(command -v "$tool") || {
     printf 'Install the pinned toolchain before running this gate: %s\n' "$tool" >&2
     exit 1
   }
   executable=$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$executable")
-  tool_path="${tool_path:+$tool_path:}$(dirname -- "$executable")"
+  tool_dir=$(dirname -- "$executable")
+  if [[ "$tool_dir" != /usr/bin && "$tool_dir" != /bin ]]; then
+    tool_path="${tool_path:+$tool_path:}$tool_dir"
+  fi
 done
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/copier-infra-ops.XXXXXXXX")
