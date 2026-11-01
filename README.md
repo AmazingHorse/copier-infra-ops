@@ -49,4 +49,6 @@ Clone `copier-base` as a sibling, or set `BASE_TEMPLATE` to a local clone. Insta
 
 The isolated harness snapshots both local Git repositories, makes a test tag only in temporary fixtures if needed, renders all three IaC combinations and checks `just --list` and `just check` without Bitwarden or network dependencies. It also checks conditional files, tool pins, base-owned byte preservation, custom project files and both independent update paths. HOME/XDG/cache state is isolated and removed on exit. Source repositories and their tags are not changed.
 
+The hosted gate activates Copier explicitly alongside the rendered project's toolchain; project tool activation alone does not include the maintainer's Copier binary.
+
 CI performs tool installation as an explicit preceding step, then runs this same offline gate with read-only repository permissions. This template deliberately has no Copier tasks or migrations, so `--trust` is not required.

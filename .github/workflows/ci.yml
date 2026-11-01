@@ -57,5 +57,5 @@ jobs:
         env:
           BASE_TEMPLATE: ${{ github.workspace }}/copier-base
         run: |
-          mise -C "$TOOLCHAIN_PROJECT" exec -- \
-            mise exec -- bash "$GITHUB_WORKSPACE/copier-infra-ops/tests/render.sh"
+          mise -C "$TOOLCHAIN_PROJECT" exec pipx:copier@9.19.1 -- \
+            bash "$GITHUB_WORKSPACE/copier-infra-ops/tests/render.sh"
